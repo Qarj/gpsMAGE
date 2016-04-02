@@ -15,6 +15,8 @@ $VERSION = '0.01';
 
 #    Example: 
 #              gpsMAGE.pl examples\tfl_map.txt
+#              gpsMAGE.pl examples\tfl_directions.txt
+
 
 use Getopt::Long;
 use File::Basename;
@@ -160,10 +162,18 @@ sub _output_footer {
 #------------------------------------------------------------------
 sub detect_gps_format {
 
+    # https://api-prod6.tfl.gov.uk//Journey/JourneyResults/SW8%201EH/to/1003196?AccessibilityPreference=norequirements&CyclePreference=AllTheWay&Date=20160402&JourneyPreference=leasttime&MaxWalkingMinutes=40&numberOfTrips=3&Mode=cycle&NationalSearch=False&Time=1415&TimeIs=Departing&WalkingOnly=False&IsExternalWidget=False&WalkingSpeed=average&bikeProficiency=easy,moderate,fast&alternativewalking=true&WalkingOptimization=False&app_id=8268063a&app_key=14f7f5ff5d64df2e88701cef2049c804
     $gps_formats{ TFLMap } = {
                                  description => 'Transport for London Map Data',
                                  pattern => '"startLat":(-?\d+\.\d+),"startLon":(-?\d+\.\d+),"endLat":(-?\d+\.\d+),"endLon":(-?\d+\.\d+)',
                              };
+
+    # 
+    # https://tfl.gov.uk/plan-a-journey/results?IsAsync=true&JpType=cycling&InputFrom=SW9+9SL&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail%2Criver-tour&From=SW9+9SL&FromId=&PreviousFrom=SW9+9SL&InputTo=Alexandra+Palace%2C+Alexandra+Palace+Park&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail%2Criver-tour&To=Alexandra+Palace%2C+Alexandra+Palace+Park&ToId=1003196&PreviousTo=Alexandra+Palace%2C+Alexandra+Palace+Park&Date=20160402&Time=2015&Mode=bus&Mode=tube&Mode=national-rail&Mode=dlr&Mode=overground&Mode=tflrail&Mode=river-bus&Mode=tram&Mode=cable-car&Mode=coach&CyclePreference=AllTheWay&WalkingSpeedWalking=average&JourneyPreference=leasttime&AccessibilityPreference=norequirements&MaxWalkingMinutes=40&WalkingSpeedTransport=average&InputVia=&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail&Via=&ViaId=&PreviousVia=&NationalSearch=false&WalkingOptimization=false&SavePreferences=false&IsMultipleJourneySelection=True&JourneyType=&IsPastWarning=False&ispostback=true&app_id=8268063a&app_key=14f7f5ff5d64df2e88701cef2049c804
+    $gps_formats{ TFLDirections } = {
+                                        description => 'Transport for London Streetview Directions',
+                                        pattern => 'location=(-?\d+\.\d+),(-?\d+\.\d+)&heading=\d+',
+                                };
 
     foreach my $_gps_format_name ( sort keys %gps_formats ) {
         my $test = $gps_formats{$_gps_format_name}->{pattern};
