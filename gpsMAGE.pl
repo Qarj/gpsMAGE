@@ -40,6 +40,9 @@ get_options();
 my $sourcefile_content = read_file($sourcefile_full);
 
 my $chosen_format = detect_gps_format();
+if (not defined $chosen_format) {
+    die "\nFormat of input not detected\n";
+}
 print "\nSource GPS Format : $chosen_format\n\n";
 
 output_gpx_route($chosen_format);
@@ -66,7 +69,7 @@ sub output_gpx_route {
                 }
                 _write_gpx_file($_file_number, $_chosen_format);
                 $_file_number++;
-                $route = '';
+                undef $route;
                 undef $_saveLat;
                 undef $_saveLon;
                 undef $_save_end_Lat;
@@ -95,6 +98,11 @@ sub output_gpx_route {
 
 sub _write_gpx_file {
     my ($_file_number, $_chosen_format) = @_;
+
+    if (not defined $route) {
+        print {*STDOUT} "\nNothing to write\n\n";
+        return;
+    }
 
     my $_output_file = "$sourcefile_name"."_$_file_number".'_mage.gpx';
 
