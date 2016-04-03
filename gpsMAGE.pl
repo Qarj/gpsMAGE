@@ -106,6 +106,7 @@ sub output_gpx_route {
     return;
 }
 
+#------------------------------------------------------------------
 sub _value {
     my ($_loc) = @_;
 
@@ -121,6 +122,7 @@ sub _value {
     return $_result;
 }
 
+#------------------------------------------------------------------
 sub _name {
     my ($_position_number, $_wpt_name, $_wpt_supp) = @_;
     my $_name;
@@ -174,6 +176,8 @@ sub _name {
 
     return $_name, $_cmt;
 }
+
+#------------------------------------------------------------------
 sub _write_gpx_file {
     my ($_file_number, $_chosen_format) = @_;
 
@@ -182,7 +186,7 @@ sub _write_gpx_file {
         return;
     }
 
-    my $_output_file = "$sourcefile_name"."_$_file_number".'_mage.gpx';
+    my $_output_file = "$sourcefile_name"."_$_file_number"."_$_chosen_format.gpx";
 
     print {*STDOUT} "Writing file $_file_number : $_output_file\n";
 
@@ -195,6 +199,7 @@ sub _write_gpx_file {
     return;
 }
 
+#------------------------------------------------------------------
 sub _output_position {
     my ($_lat, $_lon, $_position_name, $_cmt) = @_;
 
@@ -212,6 +217,7 @@ sub _output_position {
     return $_position_xml;
 }
 
+#------------------------------------------------------------------
 sub _output_header {
     my ($_file_number, $_chosen_format) = @_;
 
@@ -228,6 +234,7 @@ sub _output_header {
     return $_header_xml;
 }
 
+#------------------------------------------------------------------
 sub _output_footer {
 
     my $_footer_xml;
