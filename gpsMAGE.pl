@@ -125,7 +125,15 @@ sub _name {
     my ($_position_number, $_wpt_name, $_wpt_supp) = @_;
     my $_name;
 
-    my $_wpt_desc = $_wpt_name.':'.$_wpt_supp;
+    my $_wpt_desc = '';
+    if (defined $_wpt_name) {
+        $_wpt_desc .= $_wpt_name;
+    }
+
+    if (defined $_wpt_supp) {
+        $_wpt_desc .= ':'.$_wpt_supp;
+    }
+
     # GPSMAP 60CSx only allows 14 characters in the name
 
     $_name = $_position_number.':';
