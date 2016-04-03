@@ -16,6 +16,7 @@ $VERSION = '0.01';
 #    Example: 
 #              gpsMAGE.pl examples\tfl_map.txt
 #              gpsMAGE.pl examples\tfl_directions.txt
+#              gpsMAGE.pl examples\tfl_webinject.txt
 
 
 use Getopt::Long;
@@ -43,13 +44,13 @@ get_options();
 
 my $sourcefile_content = read_file($sourcefile_full);
 
-my $chosen_format = detect_gps_format();
+my $chosen_format;
+
+detect_and_process_gps_format();
+
 if (not defined $chosen_format) {
     die "\nFormat of input not detected\n";
 }
-print "\nSource GPS Format : $chosen_format\n\n";
-
-output_gpx_route($chosen_format);
 
 #------------------------------------------------------------------
 sub output_gpx_route {
@@ -203,6 +204,10 @@ sub _write_gpx_file {
 sub _output_position {
     my ($_lat, $_lon, $_position_name, $_cmt) = @_;
 
+    if (not $_cmt) {
+        $_cmt = $_position_name;
+    }
+
     my $_position_xml;
 
     $_position_xml .= qq|        <rtept lat="$_lat" lon="$_lon">\n|;
@@ -247,7 +252,7 @@ sub _output_footer {
 
 
 #------------------------------------------------------------------
-sub detect_gps_format {
+sub detect_and_process_gps_format {
 
     # https://api-prod6.tfl.gov.uk//Journey/JourneyResults/SW8%201EH/to/1003196?AccessibilityPreference=norequirements&CyclePreference=AllTheWay&Date=20160402&JourneyPreference=leasttime&MaxWalkingMinutes=40&numberOfTrips=3&Mode=cycle&NationalSearch=False&Time=1415&TimeIs=Departing&WalkingOnly=False&IsExternalWidget=False&WalkingSpeed=average&bikeProficiency=easy,moderate,fast&alternativewalking=true&WalkingOptimization=False&app_id=8268063a&app_key=14f7f5ff5d64df2e88701cef2049c804
     $gps_formats{ TFLMap } = {
@@ -273,7 +278,9 @@ sub detect_gps_format {
     foreach my $_gps_format_name ( sort keys %gps_formats ) {
         my $test = $gps_formats{$_gps_format_name}->{pattern};
         if ( $sourcefile_content =~ m{$test}is ) {
-            return $_gps_format_name;
+            $chosen_format = $_gps_format_name;
+            print "\n";
+            output_gpx_route($_gps_format_name);
         }
     }
 
