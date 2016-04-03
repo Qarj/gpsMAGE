@@ -36,6 +36,8 @@ my %gps_formats = ( name => {
                                pattern => 'regex to match the gps format',
                               }
                   );
+my ($d1, $d2, $d3, $d4, $d5, $d6);
+
 
 get_options();
 
@@ -55,16 +57,21 @@ sub output_gpx_route {
 
 
     my $_regex = $gps_formats{$_chosen_format}->{pattern};
+    my $_start_lat_ref = $gps_formats{$_chosen_format}->{start_lat_ref};
+    my $_start_lon_ref = $gps_formats{$_chosen_format}->{start_lon_ref};
+    my $_wpt_name_ref = $gps_formats{$_chosen_format}->{wpt_name_ref};
+    my $_wpt_supp_ref = $gps_formats{$_chosen_format}->{wpt_supp_ref};
+    my $_end_lat_ref = $gps_formats{$_chosen_format}->{end_lat_ref};
+    my $_end_lon_ref = $gps_formats{$_chosen_format}->{end_lon_ref};
 
     my $_position_number = 1;
-    my ($_startLat, $_startLon, $_endLat, $_endLon);
 
     my ($_saveLat, $_saveLon, $_save_end_Lat, $_save_end_Lon);
     my $_file_number = 1;
     while ( $sourcefile_content =~ m{$_regex}ig ) {
-        ($_startLat, $_startLon, $_endLat, $_endLon) = ($1, $2, $3, $4);
+        ($d1, $d2, $d3, $d4, $d5, $d6) = ($1, $2, $3, $4, $5, $6);
         if (defined $_saveLat) {
-            if ( ($_saveLat == $_startLat) && ($_saveLon == $_startLon) ) {
+            if ( ($_saveLat == _value($_start_lat_ref) ) && ($_saveLon == _value($_start_lon_ref) ) ) {
                 # alternative route found, output current route and process the next
                 if (defined $_save_end_Lat) {
                     $route .= _output_position($_save_end_Lat, $_save_end_Lon, "Final Position $_position_number");
@@ -80,22 +87,33 @@ sub output_gpx_route {
             }
         }
         if (not defined $_saveLat) {
-            $_saveLat = $_startLat;
-            $_saveLon = $_startLon;
+            $_saveLat = _value($_start_lat_ref);
+            $_saveLon = _value($_start_lon_ref);
         }
-        $_save_end_Lat = $_endLat;
-        $_save_end_Lon = $_endLon;
-        $route .= _output_position($_startLat, $_startLon, "Position $_position_number");
+        $_save_end_Lat = _value($_end_lat_ref);
+        $_save_end_Lon = _value($_end_lon_ref);
+        $route .= _output_position(_value($_start_lat_ref), _value($_start_lon_ref), "Position $_position_number");
         $_position_number++;
     }
 
     # deal with the final file
-    if (defined $_endLat) {
-        $route .= _output_position($_endLat, $_endLon, "Final Position $_position_number");
+    if (defined $_end_lat_ref) {
+        $route .= _output_position(_value($_end_lat_ref), _value($_end_lon_ref), "Final Position $_position_number");
     }
     _write_gpx_file($_file_number, $_chosen_format);
 
     return;
+}
+
+sub _value {
+    my ($_loc) = @_;
+
+    my $_result;
+    my $_assign = '$_result = $'."$_loc".';';
+    #print "_assign:$_assign\n";
+    eval { eval  "$_assign";  };
+    #print "_result:$_result\n";
+    return $_result;
 }
 
 sub _write_gpx_file {
@@ -166,6 +184,10 @@ sub detect_gps_format {
     $gps_formats{ TFLMap } = {
                                  description => 'Transport for London Map Data',
                                  pattern => '"startLat":(-?\d+\.\d+),"startLon":(-?\d+\.\d+),"endLat":(-?\d+\.\d+),"endLon":(-?\d+\.\d+)',
+                                 start_lat_ref => 'd1',
+                                 start_lon_ref => 'd2',
+                                 end_lat_ref => 'd3',
+                                 end_lon_ref => 'd4',
                              };
 
     # 
@@ -173,6 +195,10 @@ sub detect_gps_format {
     $gps_formats{ TFLDirections } = {
                                         description => 'Transport for London Streetview Directions',
                                         pattern => 'location=(-?\d+\.\d+),(-?\d+\.\d+)&heading=\d+',
+                                        wpt_name_ref => 'd9',
+                                        wpt_supp_ref => 'd8',
+                                        start_lat_ref => 'd1',
+                                        start_lon_ref => 'd2',
                                 };
 
     foreach my $_gps_format_name ( sort keys %gps_formats ) {
