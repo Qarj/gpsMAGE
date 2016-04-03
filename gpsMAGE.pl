@@ -70,7 +70,7 @@ sub output_gpx_route {
     my $_file_number = 1;
     while ( $sourcefile_content =~ m{$_regex}isg ) {
         ($d1, $d2, $d3, $d4, $d5, $d6) = ($1, $2, $3, $4, $5, $6);
-        print "d1:d2:$d1:$d2\n";
+        #print "d1:d2|$d1:$d2\n";
         if (defined $_saveLat) {
             if ( ($_saveLat == _value($_start_lat_ref) ) && ($_saveLon == _value($_start_lon_ref) ) ) {
                 # alternative route found, output current route and process the next
@@ -124,6 +124,7 @@ sub _value {
 sub _name {
     my ($_position_number, $_wpt_name, $_wpt_supp) = @_;
     my $_name;
+    my $_cmt;
 
     my $_wpt_desc = '';
     if (defined $_wpt_name) {
@@ -135,23 +136,32 @@ sub _name {
     }
 
     # GPSMAP 60CSx only allows 14 characters in the name
+    # GPSMAP 60CSx only allows 250 waypoints per route
+    # http://advrider.com/index.php?threads/how-do-you-follow-the-tracks-you-load-to-garmin-gps.459508/
 
     $_name = $_position_number.':';
 
     if ( $_wpt_desc =~ m/left|right/i ) {
         if ( $_wpt_desc =~ m/(left)/i ) {
             $_name .= 'L';
+            $_cmt .= 'Left';
         }
     
         if ( $_wpt_desc =~ m/(right)/i ) {
             $_name .= 'R';
+            $_cmt .= 'Right';
         }
     } elsif ( $_wpt_desc =~ m/(continue)/i ) {
         $_name .= 'C';
+        $_cmt .= 'Cont';
     }
 
     if ( $_wpt_desc =~ m/([\w]+) (road|walk|street|grove|mall|avenue|terrace|roundabout|crescent|yard|lane|vale|gardens|bridge|village)/i ) {
         $_name .= ' '.$1;
+        $_cmt .= ' '.$1.' '.$2;
+    } elsif ( $_wpt_desc =~ m/on to ([\w]+ [\w]*)/i) {
+        $_name .= ' '.$1;
+        $_cmt .= ' '.$1;
     }
     
     if ( $_wpt_desc =~ m/\b([\d]+)m\b/ ) {
@@ -159,9 +169,10 @@ sub _name {
         if (length $_name.$_distance < 15) {
             $_name = $_name.$_distance;
         }
+        $_cmt = $_cmt.$_distance;
     }        
 
-    return $_name;
+    return $_name, $_cmt;
 }
 sub _write_gpx_file {
     my ($_file_number, $_chosen_format) = @_;
@@ -185,16 +196,18 @@ sub _write_gpx_file {
 }
 
 sub _output_position {
-    my ($_lat, $_lon, $_position_name) = @_;
+    my ($_lat, $_lon, $_position_name, $_cmt) = @_;
 
     my $_position_xml;
 
     $_position_xml .= qq|        <rtept lat="$_lat" lon="$_lon">\n|;
     $_position_xml .= qq|            <ele>0.0</ele>\n|;
     $_position_xml .= qq|            <name>$_position_name</name>\n|;
+    $_position_xml .= qq|            <cmt>$_cmt</cmt>\n|;
     $_position_xml .= qq|        </rtept>\n|;
 
-    print "                                                                       _name:$_position_name\n";
+    #print "                                                                       _name:$_position_name\n";
+    #print "                                                        _cmt:$_cmt\n";
 
     return $_position_xml;
 }
@@ -243,7 +256,7 @@ sub detect_gps_format {
     # https://tfl.gov.uk/plan-a-journey/results?IsAsync=true&JpType=cycling&InputFrom=SW9+9SL&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail%2Criver-tour&From=SW9+9SL&FromId=&PreviousFrom=SW9+9SL&InputTo=Alexandra+Palace%2C+Alexandra+Palace+Park&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail%2Criver-tour&To=Alexandra+Palace%2C+Alexandra+Palace+Park&ToId=1003196&PreviousTo=Alexandra+Palace%2C+Alexandra+Palace+Park&Date=20160402&Time=2015&Mode=bus&Mode=tube&Mode=national-rail&Mode=dlr&Mode=overground&Mode=tflrail&Mode=river-bus&Mode=tram&Mode=cable-car&Mode=coach&CyclePreference=AllTheWay&WalkingSpeedWalking=average&JourneyPreference=leasttime&AccessibilityPreference=norequirements&MaxWalkingMinutes=40&WalkingSpeedTransport=average&InputVia=&DataSetsJson=null&Modes=tube%2Cdlr%2Coverground%2Ctflrail%2Cbus%2Criver-bus%2Ctram%2Ccable-car%2Cnational-rail&Via=&ViaId=&PreviousVia=&NationalSearch=false&WalkingOptimization=false&SavePreferences=false&IsMultipleJourneySelection=True&JourneyType=&IsPastWarning=False&ispostback=true&app_id=8268063a&app_key=14f7f5ff5d64df2e88701cef2049c804
     $gps_formats{ TFLDirections } = {
                                         description => 'Transport for London Streetview Directions',
-                                        pattern => 'instruction-heading[^\>]*\>([\w ]+).{5,80}"instruction-description"\>([\w, ]+).{5,900}location=(-?\d+\.\d+),(-?\d+\.\d+)&heading=\d+',
+                                        pattern => 'instruction-heading[^\>]*\>([\w ]+).{5,80}"instruction-description"\>([\w, ]+).{5,1400}location=(-?\d+\.\d+),(-?\d+\.\d+)&heading=\d+',
                                         wpt_name_ref => 'd1',
                                         wpt_supp_ref => 'd2',
                                         start_lat_ref => 'd3',
