@@ -75,3 +75,9 @@ overlay.
 ```
 gpsMAGE.pl examples\tfl_map.txt
 ```
+
+## Roadmap
+
+The next goal is to have GPS Mage produce the files straight from the command prompt without having to
+worry about capturing the HTTP traffic.
+
