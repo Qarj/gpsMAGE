@@ -140,6 +140,7 @@ sub _name {
 
     # GPSMAP 60CSx only allows 14 characters in the name
     # GPSMAP 60CSx only allows 250 waypoints per route
+    # GPSMAP 60CSx only allows 50 routes in the device
     # http://advrider.com/index.php?threads/how-do-you-follow-the-tracks-you-load-to-garmin-gps.459508/
 
     $_name = $_position_number.':';
